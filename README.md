@@ -39,4 +39,4 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 你需要安裝以下工具（建議在 Ubuntu/WSL2 環境下）：
 ```bash
 sudo apt update
-sudo apt install gcc nasm qemu-system-x86 make gcc-multilib
+sudo apt install -y nasm qemu-system-x86 build-essential gdb
