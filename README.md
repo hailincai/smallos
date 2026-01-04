@@ -1,0 +1,42 @@
+# 🚀 SmallOS
+
+SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐項目。這個項目的目標不僅是啟動內核，而是要完整實踐一個現代作業系統的核心組件，包括中斷處理、記憶體管理、多工調度與檔案系統。
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Language: C](https://img.shields.io/badge/Language-C-blue.svg)](https://en.wikipedia.org/wiki/C_(programming_language))
+[![Language: Assembly](https://img.shields.io/badge/Language-Assembly-red.svg)](https://en.wikipedia.org/wiki/Assembly_language)
+
+---
+
+## 📖 專案紀錄 (Development Journey)
+本專案的詳細開發心得與技術細節同步更新於我的 Notion 網站：
+👉 [**SmallOS 開發挑戰：從零打造 x86 作業系統**](https://striped-trout-b68.notion.site/smallos)
+
+---
+
+## 🛠️ 目前功能與進度 (Current Milestones)
+
+- [x] **Day 1**: 搭建 WSL2 + x86 編譯環境
+- [x] **Day 2**: 撰寫 512B 引導扇區 (Boot Sector)
+- [x] **Day 3**: 實作 16-bit 彙編字串列印函式
+- [x] **Day 4**: 實現磁碟加載 (Disk Loading) 突破空間限制
+- [x] **Day 5**: 設置 GDT 並切換至 32-bit 保護模式 (Protected Mode)
+- [x] **Day 6**: 啟動第一個 C 語言內核 (C Kernel)
+- [x] **Day 7**: 工程化架構重組與 Makefile 自動化編譯
+
+### ⏳ 即將到來 (Coming Soon)
+- [ ] 中斷描述符表 (IDT) 與硬體中斷處理
+- [ ] 物理與虛擬記憶體管理 (Paging)
+- [ ] 搶佔式多工調度 (Scheduler)
+- [ ] 基礎驅動 (Keyboard, Timer)
+- [ ] 互動式 Shell 界面
+
+---
+
+## 🚀 如何運行 (Getting Started)
+
+### 前置準備
+你需要安裝以下工具（建議在 Ubuntu/WSL2 環境下）：
+```bash
+sudo apt update
+sudo apt install gcc nasm qemu-system-x86 make gcc-multilib
