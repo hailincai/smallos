@@ -24,6 +24,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 - [x] **Day 6**: 啟動第一個 C 語言內核 (C Kernel)
 - [x] **Day 7**: 工程化架構重組與 Makefile 自動化編譯
 - [x] **Day 8**: 內核基礎設施 —— 數據類型、工具庫與離線測試
+- [x] **Day 09** 核心筆記：從 VGA 輸出到鍵盤中斷全鏈路實作
 
 ### ⏳ 即將到來 (Coming Soon)
 - [ ] 中斷描述符表 (IDT) 與硬體中斷處理
@@ -41,4 +42,5 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 ```bash
 sudo apt update
 sudo apt install -y nasm qemu-system-x86 build-essential gdb
+
 
