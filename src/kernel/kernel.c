@@ -1,14 +1,23 @@
+#include "isr.h"
+#include "idt.h"
+#include "display.h"
+#include "keyboard.h"
+
+extern void irq1();
+
 void main() {
-    // 指向 VGA 顯示記憶體起始位址
-    char* video_memory = (char*) 0xb8000;
+    clear_screen();
+    set_cursor_offset(get_screen_offset(0, 0)); // 初始化游標到左上角
+    kprintf("Initializing interrupt table...");
+    init_pic();
+    init_keyboard();
+    set_idt_gate(33, (u32)irq1); // set the keyboard int handler, irq1 comes from asm
+    load_idt();
+    __asm__ __volatile__("sti");
 
-    // 記憶體佈局：[字元, 顏色屬性, 字元, 顏色屬性...]
-    video_memory[0] = 'X';
-    video_memory[1] = 0x0f; // 0x0f: 黑底白字
-    video_memory[2] = 'Y';
-    video_memory[3] = 0x0f;
-    video_memory[4] = 'Z';
-    video_memory[5] = 0x0f;
-
-    while(1); // 讓 CPU 停在這裡，不要退出
+    kprint("\nSystem Ready!\n");
+    while(1)
+    {
+        __asm__ __volatile__("hlt");
+    }
 }
