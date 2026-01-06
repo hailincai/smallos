@@ -24,7 +24,7 @@ void init_pic() {
     // 初始化主從 PIC
     port_byte_out(0x20, 0x11);
     port_byte_out(0xA0, 0x11);
-    // 重新映射偏移量
+    // 重新映射偏移量, 因為默認的中斷號和CPU內部定義的中斷衝突
     port_byte_out(0x21, 0x20); // 主 PIC 映射到 32-39
     port_byte_out(0xA1, 0x28); // 從 PIC 映射到 40-47
     // 其他初始化指令...

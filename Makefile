@@ -45,11 +45,11 @@ all: os-image.bin
 # 製作 OS 鏡像 (將 Bootloader 與 Kernel 拼接)
 os-image.bin: $(BUILD_DIR)/boot/bootsect.bin $(BUILD_DIR)/kernel.bin
 	cat $^ > $@
-	# 這裡補齊磁區：如果你的核心變大了，請確保 dd 的 count 足夠大
-	# 目前設定補齊到約 32KB (64 個磁區)
-	dd if=/dev/zero bs=512 count=64 >> $@ 2>/dev/null
-	# 強制截斷到 32768 bytes (64 sectors * 512 bytes)
-	truncate -s 32768 $@
+	@# 獲取當前總大小並對齊到 512 的倍數
+	@CUR_SIZE=$$(stat -c %s $@); \
+	 ALIGNED_SIZE=$$(( ((CUR_SIZE + 511) / 512) * 512 )); \
+	 truncate -s $$ALIGNED_SIZE $@
+	@echo "OS Image created and aligned to $$(( $$(stat -c %s $@) / 512 )) sectors."
 
 # 5. 鏈結核心 (關鍵中的關鍵)
 # 順序必須是：Entry -> Main -> Interrupt -> Others
@@ -57,7 +57,6 @@ $(BUILD_DIR)/kernel.bin: $(KERNEL_ENTRY_OBJ) $(KERNEL_MAIN_OBJ) $(INTERRUPT_OBJ)
 	@echo "Linking Kernel Binary..."
 	$(LD) -m elf_i386 -o $@ -Ttext 0x1000 $^ --oformat binary
 	@echo "Kernel size: $$(stat -c %s $@) bytes"
-	@echo "Sectors needed: $$(( ($$(stat -c %s $@) + 511) / 512 ))"	
 
 # ==========================================
 # 6. 編譯規則
@@ -84,9 +83,12 @@ $(BUILD_DIR)/cpu/interrupt.o: src/kernel/cpu/interrupt.asm
 	$(NASM) $< -f elf32 -o $@
 
 # 編譯 Bootloader (直接輸出為純二進制 bin)
-$(BUILD_DIR)/boot/bootsect.bin: src/boot/boot.asm
-	@mkdir -p $(dir $@)
-	$(NASM) $< -f bin -I src/boot/ -o $@
+# 增加了对kernel.bin的依賴，所以可以計算實際的sector大小並傳入匯編
+$(BUILD_DIR)/boot/bootsect.bin: src/boot/boot.asm $(BUILD_DIR)/kernel.bin
+	@# 計算 kernel 所需扇區
+	$(eval K_SECTORS=$(shell echo $$(( ($$(stat -c %s $(BUILD_DIR)/kernel.bin) + 511) / 512 ))))
+	@# 使用 -D 參數定義常量傳給 NASM
+	nasm -f bin $< -I src/boot/ -D KERNEL_SECTORS=$(K_SECTORS) -o $@
 
 # ==========================================
 # 7. 管理指令

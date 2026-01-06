@@ -26,7 +26,7 @@ load_kernel:
     call print_string
 
     mov bx, KERNEL_OFFSET   ; 設定讀取目標位址：ES:BX = 0x0000:0x1000
-    mov dh, 20              ; 預計讀取 15 個磁區 (目前的 kernel.c 很小，15 綽綽有餘)
+    mov dh, KERNEL_SECTORS  ; 預計讀取 15 個磁區 (目前的 kernel.c 很小，15 綽綽有餘)
     mov dl, [BOOT_DRIVE]    ; 使用剛才存好的磁碟號
     call disk_load          ; 調用你之前的磁碟讀取函式
     ret
