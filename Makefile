@@ -12,7 +12,7 @@ NASM = nasm
 # -ffreestanding: 不依賴標準庫
 # -fno-pic: 禁用位置無關代碼 (用於內核)
 # -fno-stack-protector: 禁用堆疊保護，避免連結到不存在的庫
-# -fno-builtin: 確保使用我們自定義的 string 函式 (如 k_str_len)
+# -fno-builtin: 確保使用我們自定義的 string 函式 (如 str_len)
 CFLAGS = -m32 -ffreestanding -fno-pic -fno-stack-protector -fno-builtin -Wall -Wextra \
          -Isrc/kernel/cpu -Isrc/kernel/drivers -Isrc/kernel/lib -Isrc/kernel
 
@@ -34,6 +34,7 @@ OBJ = $(OTHER_C_SOURCES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 # 手動定義核心的「絕對順序」物件
 KERNEL_ENTRY_OBJ = $(BUILD_DIR)/boot/kernel_entry.o
 KERNEL_MAIN_OBJ = $(BUILD_DIR)/kernel.o
+INTERRUPT_OBJ = $(BUILD_DIR)/cpu/interrupt.o
 
 # ==========================================
 # 4. 最終目標規則
@@ -52,7 +53,7 @@ os-image.bin: $(BUILD_DIR)/boot/bootsect.bin $(BUILD_DIR)/kernel.bin
 
 # 5. 鏈結核心 (關鍵中的關鍵)
 # 順序必須是：Entry -> Main -> Interrupt -> Others
-$(BUILD_DIR)/kernel.bin: $(KERNEL_ENTRY_OBJ) $(KERNEL_MAIN_OBJ) $(OBJ)
+$(BUILD_DIR)/kernel.bin: $(KERNEL_ENTRY_OBJ) $(KERNEL_MAIN_OBJ) $(INTERRUPT_OBJ) $(OBJ)
 	@echo "Linking Kernel Binary..."
 	$(LD) -m elf_i386 -o $@ -Ttext 0x1000 $^ --oformat binary
 	@echo "Kernel size: $$(stat -c %s $@) bytes"
