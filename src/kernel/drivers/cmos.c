@@ -44,9 +44,9 @@ void get_rtc_time_string(char *buffer)
         year = bcd_to_bin(year);        
     }
 
-    // 簡單的手動格式化 (HH:MM:SS)
-    // 假設 buffer 至少有 9 bytes 空間
-    // 年份處理 (假設是 20xx 年)
+    // 簡單的手動格式化 (YYYY-MM-dd HH:MM:SS)
+    // 假設 buffer 至少有 20 bytes 空間
+    // 年份處理 (假設是 20xx 年, 我們至少還有74年是正確的)
     buffer[0] = '2';
     buffer[1] = '0';
     buffer[2] = (year / 10) + '0';

@@ -5,7 +5,7 @@
 global irq0 ; 時鐘中斷
 irq0:
     pusha           ; save environment
-    push dword 0    ; tell irq_handler, this is hardware int 1
+    push dword 0    ; tell irq_handler, this is hardware int 0
     call irq_handler
     add esp, 4      ; remove the pushed flag
     popa            ; restore environment
