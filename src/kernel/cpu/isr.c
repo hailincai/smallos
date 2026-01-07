@@ -33,6 +33,6 @@ void init_pic() {
     port_byte_out(0x21, 0x01);
     port_byte_out(0xA1, 0x01);
     // 開啟鍵盤中斷 (遮罩)
-    port_byte_out(0x21, 0xFD); // 11111101 (只留 IRQ 1)
+    port_byte_out(0x21, 0xFC); // 11111100 (只留 IRQ 1, IRQ 0)
     port_byte_out(0xA1, 0xFF); // Disable all interrupts from secondary PIC
 }
