@@ -23,6 +23,8 @@ void sleep(u32 ticksToWait)
 static void timer_callback(u32) {
     tick++;
 
+    // 因為我們設置了沒秒100次中斷，所以這裡基本就是1秒刷一次
+    // 但是這裡沒有處理tick溢出問題
     if (tick % 100 == 0)
     {
         // 每秒更新一次螢幕右上角
@@ -38,6 +40,7 @@ void init_timer(u32 freq) {
     register_interrupt_handler(0, timer_callback);
 
     // 計算除數
+    // 1193180 is the cpu freq for qemu only
     u32 divisor = 1193180 / freq;
 
     // 發送命令字 (0x36 代表：通道0、存取LOBYTE/HIBYTE、模式3平方波、二進制)
