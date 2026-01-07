@@ -3,6 +3,8 @@
 #include "types.h"
 #include "shell.h"
 #include "io.h"
+#include "keyboard.h"
+#include "cmos.h"
 
 void shell_print_prompt() 
 {
@@ -43,10 +45,10 @@ void reboot()
     u8 temp;
     // 等待鍵盤控制器緩衝區清空
     do {
-        temp = port_byte_in(0x64);
+        temp = port_byte_in(KEYBOARD_STATUS_REG);
     } while (temp & 0x02);
     
-    port_byte_out(0x64, 0xFE);
+    port_byte_out(KEYBOARD_COMMAND_REG, 0xFE);
 
     // 3. 關鍵：如果硬體重啟慢了，我們絕對不能讓 CPU 執行後面的代碼
     // 進入一個死循環，原地等待硬體重置
@@ -85,6 +87,11 @@ void shell_execute(char *input)
     }else if (k_str_cmp(input, "shutdown") == 0)
     {
         shutdown();
+    }else if (k_str_cmp(input, "time") == 0)
+    {
+        char timestr[20];
+        get_rtc_time_string(timestr);
+        kprintf("Current time is %s in UTC", timestr);
     }
     else
     {
