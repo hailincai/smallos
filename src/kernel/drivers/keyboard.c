@@ -30,8 +30,6 @@ const char ascii_shift[] = {
     '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' '
 };
 
-void keyboard_callback(u32 interrupt_no);
-
 void init_keyboard() 
 {
     // 讀取並丟棄所有當前鍵盤緩衝區的數據
@@ -41,10 +39,10 @@ void init_keyboard()
     }  
     command_ready = 0;
     key_buffer[0] = '\0';      
-    register_interrupt_handler(0x01, keyboard_callback);
+    register_interrupt_handler(33, keyboard_callback);
 }
 
-void keyboard_callback(u32) {
+void keyboard_callback(registers_t*) {
     // 讀取掃描碼
     u8 scancode = port_byte_in(0x60);
 

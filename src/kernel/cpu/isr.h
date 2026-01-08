@@ -7,6 +7,12 @@
 #define ISR_MASTER_MASK_REG 0x21
 #define ISR_SLAVE_MASK_REG 0xA1
 
-void register_interrupt_handler(u8 n, void (*handler)(u32));
+typedef struct {
+    u32 edi, esi, ebp, esp, ebx, edx, ecx, eax; // 3. 你手動 pusha 的
+    u32 int_no, err_code;                       // 2. 你手動 push 的 或 CPU 壓入的
+    u32 eip, cs, eflags, useresp, ss;           // 1. CPU 自動壓入的 (最先)
+} registers_t;
+
+void register_interrupt_handler(u8 n, void (*handler)(registers_t*));
 void init_pic();
 #endif

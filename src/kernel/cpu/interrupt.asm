@@ -1,23 +1,36 @@
 [bits 32]
 ; this is a external C method
-[extern irq_handler]
-; 時鐘中斷
-global irq0 ; 時鐘中斷
-irq0:
-    pusha           ; save environment
-    push dword 0    ; tell irq_handler, this is hardware int 0
-    call irq_handler
-    add esp, 4      ; remove the pushed flag
-    popa            ; restore environment
-    ; iret re-enable CPU level int processing
-    iret; 鍵盤中斷
+[extern isr_handler]
+%macro ISR_NOERRCODE 1
+global isr%1
+isr%1:
+    push 0
+    push %1
+    jmp isr_common_stub
+%endmacro
 
-global irq1 ; this is the hardware interrupt 1 (keyboard)
-irq1:
+; 對於某些cpu中斷，cpu在調用isr 程序之前，會自動壓入一個error code
+%macro ISR_WITHERRCODE 1
+global isr%1
+isr%1:
+    push %1
+    jmp isr_common_stub
+%endmacro
+
+ISR_WITHERRCODE 14 ;PAGE FAULT EXCEPTION
+ISR_NOERRCODE 32 ;timer interrupt
+ISR_NOERRCODE 33 ;keyboard interrupt
+
+isr_common_stub:
     pusha           ; save environment
-    push dword 1    ; tell irq_handler, this is hardware int 1
-    call irq_handler
-    add esp, 4      ; remove the pushed flag
+
+    push esp   ; push registers_t 的指針
+    call isr_handler
+    add esp, 4
+
     popa            ; restore environment
+    
+    add esp, 8 ;remove int_no and err_code
+
     ; iret re-enable CPU level int processing
-    iret
+    iret    
