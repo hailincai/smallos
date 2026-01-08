@@ -9,6 +9,7 @@ isr%1:
     jmp isr_common_stub
 %endmacro
 
+; 對於某些cpu中斷，cpu在調用isr 程序之前，會自動壓入一個error code
 %macro ISR_WITHERRCODE 1
 global isr%1
 isr%1:

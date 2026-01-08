@@ -24,7 +24,7 @@ void init_paging()
     // 將第一個頁表放入頁目錄第一項，同時重新設置屬性為0x03
     page_directory[0] = ((u32)first_page_table) | 0x3;
 
-    // register_interrupt_handler(14, page_fault_handler);
+    register_interrupt_handler(14, page_fault_handler);
 }
 
 void enable_paging() {

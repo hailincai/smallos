@@ -22,7 +22,7 @@ void main() {
     init_pic();
     init_keyboard();
     init_timer(100); // 每秒產生100次中斷
-    set_idt_gate(14, (u32)isr14); // 將 IRQ 0 (時鐘) 註冊到 32 號中斷
+    set_idt_gate(14, (u32)isr14); // 註冊PAGE FAULT EXCEPTION的中斷wrapper
     set_idt_gate(32, (u32)isr32); // 將 IRQ 0 (時鐘) 註冊到 32 號中斷
     set_idt_gate(33, (u32)isr33); // 將 IRQ 1 (鍵盤) 註冊到 33 號中斷
     load_idt();
