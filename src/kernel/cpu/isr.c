@@ -4,17 +4,18 @@
 #include "keyboard.h"
 #include "isr.h"
 
-void (*interrupt_handlers[256])(u32);
+void (*interrupt_handlers[256])(registers_t*);
 
-void register_interrupt_handler(u8 n, void (*handler)(u32)) {
+void register_interrupt_handler(u8 n, void (*handler)(registers_t*)) {
     interrupt_handlers[n] = handler;
 }
 
-void irq_handler(u32 interrupt_no) {
+void isr_handler(registers_t *reg) {
     // 呼叫已註冊的處理函式
-    if (interrupt_handlers[interrupt_no] != 0) {
-        interrupt_handlers[interrupt_no](interrupt_no);
+    if (interrupt_handlers[reg->int_no] != 0) {
+        interrupt_handlers[reg->int_no](reg);
     }
+    // kprintf("In isr process...\n");
     
     // 重要：發送 EOI (End of Interrupt) 給 PIC，否則它不會再發送下一次中斷
     // enable PIC level interrupt for same level or low level

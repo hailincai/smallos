@@ -20,7 +20,7 @@ void sleep(u32 ticksToWait)
     }
 }
 
-static void timer_callback(u32) {
+static void timer_callback(registers_t*) {
     tick++;
 
     // 因為我們設置了沒秒100次中斷，所以這裡基本就是1秒刷一次
@@ -37,7 +37,7 @@ void init_timer(u32 freq) {
     tick = 0;
     
     // 註冊 IRQ 0 (中斷號 32)
-    register_interrupt_handler(0, timer_callback);
+    register_interrupt_handler(32, timer_callback);
 
     // 計算除數
     // 1193180 is the cpu freq for qemu only
