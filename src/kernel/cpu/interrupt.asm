@@ -9,6 +9,14 @@ isr%1:
     jmp isr_common_stub
 %endmacro
 
+%macro ISR_WITHERRCODE 1
+global isr%1
+isr%1:
+    push %1
+    jmp isr_common_stub
+%endmacro
+
+ISR_WITHERRCODE 14 ;PAGE FAULT EXCEPTION
 ISR_NOERRCODE 32 ;timer interrupt
 ISR_NOERRCODE 33 ;keyboard interrupt
 

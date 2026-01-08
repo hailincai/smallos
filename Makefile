@@ -55,7 +55,7 @@ os-image.bin: $(BUILD_DIR)/boot/bootsect.bin $(BUILD_DIR)/kernel.bin
 # 順序必須是：Entry -> Main -> Interrupt -> Others
 $(BUILD_DIR)/kernel.bin: $(KERNEL_ENTRY_OBJ) $(KERNEL_MAIN_OBJ) $(INTERRUPT_OBJ) $(OBJ)
 	@echo "Linking Kernel Binary..."
-	$(LD) -m elf_i386 -o $@ -Ttext 0x1000 $^ --oformat binary
+	$(LD) -m elf_i386 -o $@ -T src/link.ld $^ --oformat binary
 	@echo "Kernel size: $$(stat -c %s $@) bytes"
 
 # ==========================================
