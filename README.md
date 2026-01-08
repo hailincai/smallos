@@ -27,6 +27,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 - [x] **Day 09**: 核心筆記：從 VGA 輸出到鍵盤中斷全鏈路實作
 - [x] **Day 10**：互動的起點 —— 增強鍵盤驅動與 Shell 實作
 - [x] **Day 11**：時間的律動 —— PIT 定時器與 CMOS 即時鐘
+- [x] **Day 12**：邁向虛擬記憶體 —— 分頁機制 (Paging) 實作
 
 ### ⏳ 即將到來 (Coming Soon)
 - [ ] 物理與虛擬記憶體管理 (Paging)
@@ -42,6 +43,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 ```bash
 sudo apt update
 sudo apt install -y nasm qemu-system-x86 build-essential gdb
+
 
 
 
