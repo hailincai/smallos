@@ -21,4 +21,4 @@ init_pm:
     mov ebp, 0x90000        ; 6. 重新設定堆疊
     mov esp, ebp
 
-    call BEGIN_PM           ; 7. 跳轉至 32 位元主程式
+    jmp 0x1000           ; 7. 跳轉至 32 位元主程式

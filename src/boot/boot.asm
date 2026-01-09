@@ -9,6 +9,11 @@
     mov si, MSG_REAL_MODE
     call print_string
 
+    ; open a20
+    in al, 0x92
+    or al, 2
+    out 0x92, al  ; 這是 Fast A20，通常 QEMU 必中    
+
     ; 2. 載入核心 (使用 LBA 模式)
     call load_kernel
 
