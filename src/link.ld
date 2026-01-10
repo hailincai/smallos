@@ -1,35 +1,36 @@
-ENTRY(_start)                /* 定義入口點符號 */
+ENTRY(_start)
 
 SECTIONS
 {
-    /* 核心載入到物理位址 1MB 處 */
-    . = 0x100000;
+    /* VMA (虛擬地址) 從 3GB + 1MB 開始 */
+    . = 0xC0100000;
 
-    /* 代碼段 */
-    .text : ALIGN(4096) {
+    /* --- 代碼段 --- */
+    /* LMA (物理地址) 強制從 0x100000 開始 */
+    .text : AT(0x100000) ALIGN(4096)
+    {
         *(.text)
-        *(.text.*)          /* 包含編譯器生成的其他代碼區塊 */
     }
 
-    /* 只讀數據段 */
-    .rodata : ALIGN(4096) {
+    /* --- 只讀數據段 --- */
+    /* 這裡的 AT 計算會自動對應到物理地址 1MB + .text 的大小 */
+    .rodata : AT(ADDR(.rodata) - 0xC0000000) ALIGN(4096)
+    {
         *(.rodata)
-        *(.rodata.*)
     }
 
-    /* 數據段 */
-    .data : ALIGN(4096) {
+    /* --- 數據段 --- */
+    .data : AT(ADDR(.data) - 0xC0000000) ALIGN(4096)
+    {
         *(.data)
-        *(.data.*)
     }
 
-    /* BSS 段（未初始化數據） */
-    .bss : ALIGN(4096) {
+    /* --- BSS 段 --- */
+    .bss : AT(ADDR(.bss) - 0xC0000000) ALIGN(4096)
+    {
         *(.COMMON)
         *(.bss)
-        *(.bss.*)
     }
 
-    /* 定義一個符號標記核心結束位置，方便之後做內存管理 */
     _kernel_end = .;
 }
