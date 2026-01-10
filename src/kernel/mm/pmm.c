@@ -6,9 +6,10 @@ extern u32 _kernel_end;
 static u32* bitmap;
 static u32 total_pages = 0;
 static u32 used_pages = 0;
-static u32 bitmap_size = 0;
+static u32 bitmap_size_bytes = 0;
 
 // 內部輔助：設置位圖中的某一位
+// divide 32 因為每個bitmap可以表示32個page的狀態
 static void bitmap_set(u32 page_idx) {
     bitmap[page_idx / 32] |= (1 << (page_idx % 32));
 }
@@ -38,14 +39,14 @@ void pmm_init() {
     }
 
     total_pages = max_addr / PAGE_SIZE;
-    bitmap_size = total_pages / 8; // 每個 bit 代表一頁，8 bits 為一字節
+    bitmap_size_bytes = total_pages / 8; // 每個 bit 代表一頁，8 bits 為一字節
     
     // 2. 將位圖放在內核結束後的地址 (高位虛擬地址)
     bitmap = (u32*)&_kernel_end;
 
     // 3. 初始化位圖：預設全部標記為「已使用」(1)
     // 這樣我們只需要把 Available 的區域「開放」出來
-    for (u32 i = 0; i < bitmap_size / 4; i++) {
+    for (u32 i = 0; i < bitmap_size_bytes / 4; i++) {
         bitmap[i] = 0xFFFFFFFF;
     }
 
@@ -66,7 +67,7 @@ void pmm_init() {
 
     // B. 鎖定內核代碼區和位圖本身
     u32 kernel_phys_start = 0x100000; // 1MB
-    u32 kernel_phys_end = ((u32)bitmap + bitmap_size - 0xC0000000);
+    u32 kernel_phys_end = ((u32)bitmap + bitmap_size_bytes - 0xC0000000);
     u32 k_start_page = kernel_phys_start / PAGE_SIZE;
     u32 k_end_page = (kernel_phys_end / PAGE_SIZE) + 1;
 
