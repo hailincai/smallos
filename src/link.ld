@@ -32,5 +32,7 @@ SECTIONS
         *(.bss)
     }
 
+    /* 先將當前地址對齊到 4KB 邊界，再賦值 */
+    . = ALIGN(4096);
     _kernel_end = .;
 }
