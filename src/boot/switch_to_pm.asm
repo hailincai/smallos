@@ -21,4 +21,18 @@ init_pm:
     mov ebp, 0x90000        ; 6. 重新設定堆疊
     mov esp, ebp
 
-    jmp 0x1000           ; 7. 跳轉至 32 位元主程式
+    ; 開始搬運：從 0x10000 搬到 0x100000
+    mov esi, 0x10000          ; Source (64KB)
+    mov edi, 0x100000         ; Destination (1MB)
+    
+    ; 計算要搬多少個 double words (4 bytes)
+    ; 假設讀取了 KERNEL_SECTORS 個磁區
+    mov eax, KERNEL_SECTORS
+    imul eax, 512             ; 轉為 bytes
+    shr eax, 2                ; 除以 4，得到 dword 數量
+    mov ecx, eax
+    
+    cld
+    rep movsd                 ; 暴力搬運    
+
+    jmp 0x100000           ; 7. 跳轉至 32 位元主程式
