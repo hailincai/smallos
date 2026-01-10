@@ -15,6 +15,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 ---
 
 ## 🛠️ 目前功能與進度 (Current Milestones)
+由於後面的內容難度越來越高，可能會經過好多天，才能完成一個功能，所以更新速度可能會變慢。
 
 - [x] **Day 1**: 搭建 WSL2 + x86 編譯環境
 - [x] **Day 2**: 撰寫 512B 引導扇區 (Boot Sector)
@@ -45,6 +46,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 ```bash
 sudo apt update
 sudo apt install -y nasm qemu-system-x86 build-essential gdb
+
 
 
 
