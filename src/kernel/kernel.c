@@ -8,12 +8,15 @@
 #include "shell.h"
 #include "timer.h"
 #include "mem.h"
+#include "gdt.h"
 
 extern void isr33();
 extern void isr32();
 extern void isr14();
 
 void main() {
+    init_gdt();
+    
     // all these code are running under PM mode
     clear_screen();
     set_cursor_offset(get_screen_offset(0, 0)); // 初始化游標到左上角

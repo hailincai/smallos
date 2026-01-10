@@ -14,7 +14,7 @@ NASM = nasm
 # -fno-stack-protector: 禁用堆疊保護，避免連結到不存在的庫
 # -fno-builtin: 確保使用我們自定義的 string 函式 (如 str_len)
 CFLAGS = -m32 -ffreestanding -fno-pic -fno-stack-protector -fno-builtin -Wall -Wextra \
-         -Isrc/kernel/cpu -Isrc/kernel/drivers -Isrc/kernel/lib -Isrc/kernel
+         -Isrc/kernel/cpu -Isrc/kernel/drivers -Isrc/kernel/lib -Isrc/kernel/mm -Isrc/kernel
 
 # 3. 目錄與檔案定義
 SRC_DIR = src/kernel
@@ -98,4 +98,5 @@ clean:
 	rm -rf build/ os-image.bin
 
 run: os-image.bin
-	qemu-system-i386 -drive format=raw,file=os-image.bin -d int,cpu_reset -no-reboot
+# 	qemu-system-i386 -drive format=raw,file=os-image.bin -d int,cpu_reset -no-reboot
+	qemu-system-i386 -drive format=raw,file=os-image.bin -no-reboot
