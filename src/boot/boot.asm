@@ -9,6 +9,11 @@
     mov si, MSG_REAL_MODE
     call print_string
 
+    ; open a20
+    in al, 0x92
+    or al, 2
+    out 0x92, al  ; 這是 Fast A20，通常 QEMU 必中    
+
     ; 2. 載入核心 (使用 LBA 模式)
     call load_kernel
 
@@ -28,8 +33,8 @@ load_kernel:
 
     ; 設定 DAP 結構內容
     mov word [dap.count], KERNEL_SECTORS   ; Makefile 傳入的磁區數量
-    mov word [dap.offset], KERNEL_OFFSET    ; 0x1000
-    mov word [dap.segment], 0x0000          ; 段位址
+    mov word [dap.offset], 0x0000    ; 0x1000
+    mov word [dap.segment], 0x1000          ; 段位址
     mov dword [dap.lba_low], 1              ; 從 LBA 1 開始 (LBA 0 是引導磁區)
 
     ; 呼叫 LBA 讀取
@@ -62,11 +67,6 @@ dap:
     .segment dw 0          ; 目標地址段 (Segment)
     .lba_low dd 0          ; 起始 LBA 低 32 位元
     .lba_high dd 0         ; 起始 LBA 高 32 位元 (通常為 0)
-
-[bits 32]
-BEGIN_PM:
-    call KERNEL_OFFSET
-    jmp $
 
 ; ---------------------------------------------------------
 ; 數據區
