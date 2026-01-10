@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include "display.h"
 #include "types.h"
+#include "mem.h"
 
 // VGA 控制埠
 #define REG_SCREEN_CTRL 0x3D4
@@ -36,14 +37,14 @@ int handle_scrolling(int cursor_offset) {
     // 搬移記憶體
     for (int i = 1; i < MAX_ROWS; i++) {
         memory_copy(
-            (char*)(VIDEO_ADDRESS + get_screen_offset(0, i)),
-            (char*)(VIDEO_ADDRESS + get_screen_offset(0, i - 1)),
+            (char*)(VIDEO_VIRT_ADDR + get_screen_offset(0, i)),
+            (char*)(VIDEO_VIRT_ADDR + get_screen_offset(0, i - 1)),
             MAX_COLS * 2
         );
     }
 
     // 清除最後一行
-    char* last_line = (char*)(VIDEO_ADDRESS + get_screen_offset(0, MAX_ROWS - 1));
+    char* last_line = (char*)(VIDEO_VIRT_ADDR + get_screen_offset(0, MAX_ROWS - 1));
     for (int i = 0; i < MAX_COLS * 2; i += 2) {
         last_line[i] = ' ';
         last_line[i+1] = WHITE_ON_BLACK;
@@ -54,7 +55,7 @@ int handle_scrolling(int cursor_offset) {
 }
 
 void clear_screen() {
-    char* video_memory = (char*) VIDEO_ADDRESS;
+    char* video_memory = (char*) VIDEO_VIRT_ADDR;
     for (int i = 0; i < MAX_ROWS * MAX_COLS; i++) {
         video_memory[i * 2] = ' ';
         video_memory[i * 2 + 1] = WHITE_ON_BLACK;
@@ -89,7 +90,7 @@ void set_cursor_offset(int offset) {
 // 修改後的 kprint，自動接續游標印字
 void kprint(char* message) {
     int offset = get_cursor_offset();
-    char* video_memory = (char*) VIDEO_ADDRESS;
+    char* video_memory = (char*) VIDEO_VIRT_ADDR;
 
     for (int i = 0; message[i] != 0; i++) {
         // 處理手動換行符 '\n'
