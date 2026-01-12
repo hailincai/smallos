@@ -6,7 +6,7 @@ extern u32 _kernel_end;
 static u32* bitmap;
 static u32 total_pages = 0;
 static u32 used_pages = 0;
-static u32 bitmap_size_bytes = 0;
+u32 bitmap_size_bytes = 0;
 
 // 內部輔助：設置位圖中的某一位
 // divide 32 因為每個bitmap可以表示32個page的狀態
@@ -29,6 +29,7 @@ static int bitmap_test(u32 page_idx) {
 }
 
 void pmm_init() {
+    // 這時候的虛擬地址是通過kernel entry中設置的簡單頁表
     u32 entry_count = *(u32*)0xC0008000; // PHYS_TO_VIRT(0x8000)
     mmap_entry_t* entries = (mmap_entry_t*)0xC0008004;
 
@@ -58,6 +59,7 @@ void pmm_init() {
 
     // 4. 根據內存地圖開放可用區域
     for (u32 i = 0; i < entry_count; i++) {
+        // == 1 means this memory segment is available
         if (entries[i].type == 1) {
             u32 page_start = entries[i].base_low / PAGE_SIZE;
             u32 page_count = entries[i].length_low / PAGE_SIZE;
