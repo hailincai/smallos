@@ -9,10 +9,22 @@
 #include "timer.h"
 #include "mem.h"
 #include "gdt.h"
+#include "pmm.h"
 
 extern void isr33();
 extern void isr32();
 extern void isr14();
+
+void test_pmm_info() {
+    u32 total = pmm_get_total_memory() / 1024 / 1024;
+    u32 free  = pmm_get_free_memory() / 1024 / 1024;
+    u32 used  = pmm_get_used_memory(); // 使用量通常較小，用 byte 或 KB 顯示
+
+    kprintf("Memory Info:\n");
+    kprintf("  Total: %x MB\n", total);
+    kprintf("  Free: %x MB\n", free);
+    kprintf("  Used: %x KB\n", used / 1024);
+}
 
 void main() {
     init_gdt();
@@ -32,6 +44,9 @@ void main() {
     load_idt();
     __asm__ __volatile__("sti"); // 重要：開啟全域中斷開關. cpu level
     kprint("Loading SmallOS...\n");
+
+    pmm_init();
+    test_pmm_info();
     
     shell_print_prompt();
     set_backspace_min();
