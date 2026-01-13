@@ -31,7 +31,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 - [x] **Day 12**：邁向虛擬記憶體 —— 分頁機制 (Paging) 實作
 - [x] **Day 13**：跨越 3G 邊界 —— Higher Half Kernel 與地址重定位
 - [x] **Day 14**：內核的完全體 —— GDT 重定位與物理記憶體管理 (PMM)
-- [x] **Day 15**：構建記憶體秩序 —— 物理與虛擬記憶體管理系統
+- [x] **Day 15**：構建記憶體秩序 —— 虛擬記憶體管理系統
 
 ### ⏳ 即將到來 (Coming Soon)
 - [ ] 物理與虛擬記憶體管理 (Paging)
@@ -47,6 +47,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 ```bash
 sudo apt update
 sudo apt install -y nasm qemu-system-x86 build-essential gdb
+
 
 
 
