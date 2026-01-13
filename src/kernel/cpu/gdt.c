@@ -32,18 +32,21 @@ void init_gdt() {
 }
 
 void gdt_flush(u32 gdt_ptr_addr) {
-__asm__ __volatile__ (
-        "lgdt (%0)        \n\t"
-        "mov $0x10, %%ax  \n\t"
-        "mov %%ax, %%ds   \n\t"
-        "mov %%ax, %%es   \n\t"
-        "mov %%ax, %%fs   \n\t"
-        "mov %%ax, %%gs   \n\t"
-        "mov %%ax, %%ss   \n\t"
-        "ljmp $0x08, $1f  \n\t"  // 修正點：去掉引用的點，改為 $1f
-        "1:               \n\t"  // 修正點：標籤改為 1:
-        : 
-        : "r" (gdt_ptr_addr)
-        : "eax", "memory"        // 建議加上 "memory" 屏障
-    );
+    // memory means
+    // 阻止編譯器優化任何和相關內存的代碼
+    // 並且保證在這個代碼執行之後，任何對相關內存的訪問都會重新read, 不會使用任何的cache
+    __asm__ __volatile__ (
+            "lgdt (%0)        \n\t"
+            "mov $0x10, %%ax  \n\t"
+            "mov %%ax, %%ds   \n\t"
+            "mov %%ax, %%es   \n\t"
+            "mov %%ax, %%fs   \n\t"
+            "mov %%ax, %%gs   \n\t"
+            "mov %%ax, %%ss   \n\t"
+            "ljmp $0x08, $1f  \n\t"  // 修正點：去掉引用的點，改為 $1f
+            "1:               \n\t"  // 修正點：標籤改為 1:
+            : 
+            : "r" (gdt_ptr_addr)
+            : "eax", "memory"        // 建議加上 "memory" 屏障
+        );
 }
