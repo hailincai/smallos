@@ -1,6 +1,9 @@
 #include "vmm.h"
 #include "pmm.h"
 #include "mem.h"
+#include "gdt.h"
+#include "idt.h"
+#include "display.h"
 
 // 獲取地址的高 10 位 (PDE 索引)
 #define PD_INDEX(vaddr) ((vaddr) >> 22)
@@ -12,7 +15,7 @@
 extern u32 _kernel_end;
 
 // 內核全局頁目錄 (放在高位)
-static page_directory_t* kernel_directory = NULL;
+page_directory_t* kernel_directory = NULL;
 
 void vmm_map(page_directory_t* pd, u32 vaddr, u32 paddr, u32 flags) {
     u32 pd_idx = PD_INDEX(vaddr);
@@ -54,46 +57,47 @@ void vmm_switch_directory(u32 pd_phys) {
     __asm__ __volatile__("mov %0, %%cr3" : : "r" (pd_phys) : "memory");
 }
 
-void vmm_init() {
-    // 1. 分配頁目錄
-    u32 pd_phys = (u32)pmm_alloc_page();
-    kernel_directory = (page_directory_t*)PHYS_TO_VIRT(pd_phys);
-    
-    // 清空頁目錄
-    for(int i = 0; i < 1024; i++) kernel_directory->entries[i] = 0;
+void init_vmm() {
+// 1. 進入關鍵區：關閉中斷，防止切換期間發生異常導致 Triple Fault
+    __asm__ __volatile__("cli");
 
-    // --- A. Identity Map 低端內存 (0 - 4MB) ---
-    // 雖然我們可以精確計算，但為了安全（包含 VGA、BIOS 地圖等），
-    // 保持前 4MB 的 Identity Map 是一個穩定做法。
+    // 2. 分配物理頁面作為頁目錄 (Page Directory)
+    u32 pd_phys = (u32)pmm_alloc_page();
+    
+    // 獲取其虛擬地址以便內核訪問
+    kernel_directory = (page_directory_t*)PHYS_TO_VIRT(pd_phys);
+
+    // 3. 初始化頁目錄：將所有條目設為「不存在」
+    for (int i = 0; i < ENTRIES_PER_TABLE; i++) {
+        kernel_directory->entries[i] = 0;
+    }
+
+    // 4. Identity Map 低端內存 (0 - 4MB)
+    // 確保在切換 CR3 及其後的幾行代碼執行時，EIP 仍然指向有效地址
     for (u32 addr = 0; addr < 0x400000; addr += PAGE_SIZE) {
         vmm_map(kernel_directory, addr, addr, VMM_PAGE_PRESENT | VMM_PAGE_RW);
     }
 
-    // --- B. 動態映射內核區域 (High Half) ---
-    // 物理起始位址是 0x100000 (1MB)
-    // 虛擬起始位址是 0xC0100000
-    // 結束位址由 &_kernel_end 決定
-    
-    u32 v_start = 0xC0100000;
-    u32 p_start = 0x100000;
-    
-    // 計算內核（包含位圖）所在的最後一個虛擬位址
-    // 這裡我們把位圖也算進去，因為位圖緊跟在 _kernel_end 之後
-    // 為了保險，我們可以多映射幾頁，或者直接計算到位圖結束處
-    extern u32 bitmap_size_bytes; // 確保這個變量在 pmm.c 中是全局的
-    u32 v_end = (u32)&_kernel_end + bitmap_size_bytes;
-
-    for (u32 v_addr = v_start, p_addr = p_start; 
-         v_addr < v_end; 
-         v_addr += PAGE_SIZE, p_addr += PAGE_SIZE) 
-    {
-        vmm_map(kernel_directory, v_addr, p_addr, VMM_PAGE_PRESENT | VMM_PAGE_RW);
+    // 5. 映射 High Half 內核空間 (0xC0000000 - 0xC0400000)
+    // 這裡直接映射完整的 4MB 區域，確保覆蓋內核代碼、數據、BSS、GDT/IDT 和 PMM 位圖
+    for (u32 i = 0; i < 0x400000; i += PAGE_SIZE) {
+        vmm_map(kernel_directory, 0xC0000000 + i, i, VMM_PAGE_PRESENT | VMM_PAGE_RW);
     }
 
-    // 3. 【手動映射頁目錄本身，防止它落在 4MB 之外
-    // 這樣即使 pd_phys 是 100MB 處的地址，內核也能透過虛擬地址訪問它
-    vmm_map(kernel_directory, (u32)kernel_directory, pd_phys, VMM_PAGE_PRESENT | VMM_PAGE_RW);    
+    // 6. 手動映射頁目錄自身
+    // 這是為了確保當前正在使用的 Page Directory 在分頁開啟後依然可以被訪問
+    vmm_map(kernel_directory, (u32)kernel_directory, pd_phys, VMM_PAGE_PRESENT | VMM_PAGE_RW);
 
-    // --- C. 切換 CR3 ---
+    // 7. 切換 CR3 暫存器，正式啟用新的分頁結構
     vmm_switch_directory(pd_phys);
+
+    // 8. 刷新環境：在新的虛擬位址空間重新加載 GDT 和 IDT
+    // 這一點至關重要，因為舊的指針可能指向了未映射或不正確的物理地址
+    init_gdt();
+    load_idt();
+
+    // 9. 恢復中斷處理
+    __asm__ __volatile__("sti");
+
+    kprint("VMM enabled and environment reloaded successfully.\n");
 }

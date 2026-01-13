@@ -29,8 +29,10 @@ typedef struct page_table {
     page_entry_t entries[ENTRIES_PER_TABLE];
 } __attribute__((aligned(PAGE_SIZE))) page_table_t;
 
+extern page_directory_t* kernel_directory;
+
 // 初始化 VMM
-void vmm_init();
+void init_vmm();
 
 // 將虛擬地址映射到物理地址
 void vmm_map(page_directory_t* pd, u32 vaddr, u32 paddr, u32 flags);

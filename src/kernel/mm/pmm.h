@@ -10,7 +10,7 @@
 #define COMPILER_BARRIER() __asm__ __volatile__("" ::: "memory")
 
 // 函數聲明
-void pmm_init();
+void init_pmm();
 void* pmm_alloc_page();
 void pmm_free_page(void* addr);
 

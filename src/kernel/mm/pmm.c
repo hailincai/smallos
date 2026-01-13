@@ -28,7 +28,7 @@ static int bitmap_test(u32 page_idx) {
     return (bitmap[page_idx / 32] & (1 << (page_idx % 32)));
 }
 
-void pmm_init() {
+void init_pmm() {
     // 這時候的虛擬地址是通過kernel entry中設置的簡單頁表
     u32 entry_count = *(u32*)0xC0008000; // PHYS_TO_VIRT(0x8000)
     mmap_entry_t* entries = (mmap_entry_t*)0xC0008004;

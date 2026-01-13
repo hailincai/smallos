@@ -98,5 +98,4 @@ clean:
 	rm -rf build/ os-image.bin
 
 run: os-image.bin
-# 	qemu-system-i386 -drive format=raw,file=os-image.bin -d int,cpu_reset -no-reboot
-	qemu-system-i386 -drive format=raw,file=os-image.bin -no-reboot
+	qemu-system-i386 -drive format=raw,file=os-image.bin -d int,cpu_reset -no-reboot
