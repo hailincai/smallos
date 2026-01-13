@@ -10,7 +10,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 
 ## 📖 專案紀錄 (Development Journey)
 本專案的詳細開發心得與技術細節同步更新於我的 Notion 網站：
-👉 [**SmallOS 開發挑戰：從零打造 x86 作業系統**](https://striped-trout-b68.notion.site/smallos)
+👉 [**SmallOS 開發挑戰：從零打造 x86 作業系統**](https://smallos.notion.site/)
 
 ---
 
@@ -47,6 +47,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 ```bash
 sudo apt update
 sudo apt install -y nasm qemu-system-x86 build-essential gdb
+
 
 
 
