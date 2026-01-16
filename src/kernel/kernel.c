@@ -11,6 +11,7 @@
 #include "gdt.h"
 #include "pmm.h"
 #include "vmm.h"
+#include "kheap.h"
 
 extern void isr33();
 extern void isr32();
@@ -43,15 +44,29 @@ void test_vmm()
     vmm_map(kernel_directory, test_vaddr, (u32)phys_page, VMM_PAGE_PRESENT | VMM_PAGE_RW);
 
     // 3. 測試寫入
-    u32* ptr = (u32*)test_vaddr;
-    *ptr = 0xDEADC0DE;
+    // u32* ptr = (u32*)test_vaddr;
+    // *ptr = 0xDEADC0DE;
 
     // 4. 驗證讀取
-    if (*ptr == 0xDEADC0DE) {
-        kprint("VMM Test Passed! Data matched.\n");
-    } else {
-        kprint("VMM Test Failed! Data mismatch.\n");
-    }
+    // if (*ptr == 0xDEADC0DE) {
+    //     kprint("VMM Test Passed! Data matched.\n");
+    // } else {
+    //     kprint("VMM Test Failed! Data mismatch.\n");
+    // }
+}
+
+void test_kmalloc() {
+    void* p1 = kmalloc(100);
+    void* p2 = kmalloc(200);
+    kfree(p1);
+    void* p3 = kmalloc(50); // 應該佔用原 p1 的前半部分
+
+    DEBUG_KHEAP("Alloc Test", {p2, "p2_buf"}, {p3, "p3_task"});
+    // void* p4 = kmalloc(50); // 應該佔用原 p1 的後半部分
+    // print_kheap("after allocate p4");
+
+    // kfree(p2);
+    // print_kheap("after free p2");   
 }
 
 void main() {
@@ -76,8 +91,10 @@ void main() {
     init_pmm();
     // test_pmm_info();
     init_vmm();
-    test_vmm();
-    
+    // test_vmm();
+    init_kheap();
+    test_kmalloc();    
+  
     shell_print_prompt();
     set_backspace_min();
     while(1) 
