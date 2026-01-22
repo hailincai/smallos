@@ -30,7 +30,9 @@ void vmm_map(page_directory_t* pd, u32 vaddr, u32 paddr, u32 flags) {
         
         // 將新的頁表掛載到頁目錄 (注意存入的是物理地址)
         // 權限通常給予 Present | RW | User，具體權限由 PTE 控制
-        *pde = new_pt_phys | VMM_PAGE_PRESENT | VMM_PAGE_RW;
+        // PDE 應該讓內核態和用戶態都能訪問
+        // PTE會正式區分是內核態還是用戶態，從而實現權限控制
+        *pde = new_pt_phys | VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_USER;
 
         // 清空這個新頁表的內容 (需要先轉成虛擬地址才能訪問)
         page_table_t* new_pt_virt = (page_table_t*)PHYS_TO_VIRT(new_pt_phys);
@@ -49,6 +51,7 @@ void vmm_map(page_directory_t* pd, u32 vaddr, u32 paddr, u32 flags) {
 
     // 3. 通知 CPU 刷新 TLB (如果修改的是當前正在運行的頁表)
     // 簡單的做法是重新加載 CR3，或者使用 invlpg
+    // 告訴 CPU 某個特定的虛擬地址映射已經失效，請將其從 TLB 中清除
     __asm__ __volatile__("invlpg (%0)" : : "r" (vaddr) : "memory");
 }
 
@@ -74,6 +77,7 @@ void init_vmm() {
 
     // 4. Identity Map 低端內存 (0 - 4MB)
     // 確保在切換 CR3 及其後的幾行代碼執行時，EIP 仍然指向有效地址
+    // 而且我们没有给他设置VM_PAGE_USER, 所以0x00000000 and 0xC0000000开始的4MB都是用户态的禁区
     for (u32 addr = 0; addr < 0x400000; addr += PAGE_SIZE) {
         vmm_map(kernel_directory, addr, addr, VMM_PAGE_PRESENT | VMM_PAGE_RW);
     }
