@@ -137,3 +137,20 @@ int k_str_cmp(char *s1, char *s2)
 
     return (str1_len == str2_len) ? 0 : ((str1_len == min_len) ? -1 : 1);
 }
+
+void *k_mem_set(void *dest, u8 val, u32 len) {
+    u8 *temp = (u8 *)dest;
+    for ( ; len != 0; len--) {
+        *temp++ = val;
+    }
+    return dest;
+}
+
+void *k_mem_copy(void *dest, const void *src, u32 len) {
+    const u8 *sp = (const u8 *)src;
+    u8 *dp = (u8 *)dest;
+    for ( ; len != 0; len--) {
+        *dp++ = *sp++;
+    }
+    return dest;
+}
