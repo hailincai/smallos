@@ -14,10 +14,12 @@
 #include "kheap.h"
 #include "task.h"
 #include "string.h"
+#include "syscall.h"
 
 extern void isr33();
 extern void isr32();
 extern void isr14();
+extern void isr128();
 
 void test_pmm_info() {
     u32 total = pmm_get_total_memory() / 1024 / 1024;
@@ -71,12 +73,6 @@ void test_kmalloc() {
     // print_kheap("after free p2");   
 }
 
-void user_test_app() {
-    while(1) {
-        // 这里不能 call kprintf，只能做计算或死循环
-    }
-}
-
 void main() {
     init_gdt();
     
@@ -89,9 +85,19 @@ void main() {
     init_keyboard();
     init_timer(100); // 每秒產生100次中斷
     init_mem();
+    init_syscall();
     set_idt_gate(14, (u32)isr14); // 註冊PAGE FAULT EXCEPTION的中斷wrapper
     set_idt_gate(32, (u32)isr32); // 將 IRQ 0 (時鐘) 註冊到 32 號中斷
     set_idt_gate(33, (u32)isr33); // 將 IRQ 1 (鍵盤) 註冊到 33 號中斷
+    set_idt_gate(33, (u32)isr33); // 设置软中断，用户切入内核代码(int 0x80)
+    // 參數說明：
+    // 128 (0x80): 中斷號
+    // (u32)syscall_handler: 匯編跳板函數地址
+    // 0x08: 內核代碼段選擇子 (Kernel CS)
+    // 0xEE: 標誌位。 
+    //       0x8E 是 10001110 (DPL=0)
+    //       0xEE 是 11101110 (DPL=3, 類型為 32-bit Interrupt Gate)
+    set_idt_gate_extended(128, (u32)isr128, KERNEL_CS, 0xEE);    
     load_idt();
     __asm__ __volatile__("sti"); // 重要：開啟全域中斷開關. cpu level
 
@@ -129,19 +135,8 @@ void main() {
     kprintf("Preparing User Mode at 0x400000...\n");
     
     // 1. 分配并映射用户代码页 (0x400000)
-    u32 user_code_phys = (u32)pmm_alloc_page();
-    vmm_map(kernel_directory, 0x400000, user_code_phys, 0x07); // User | RW | Present
-    
-    // 2. 拷贝代码（将 user_test_app 拷贝到物理页对应的内核虚拟地址）
-    k_mem_copy((void*)PHYS_TO_VIRT(user_code_phys), (void*)user_test_app, 1024);
-
-    // 3. 分配并映射用户栈页 (0x800000)
-    u32 user_stack_phys = (u32)pmm_alloc_page();
-    vmm_map(kernel_directory, 0x800000, user_stack_phys, 0x07);
-
-    // --- 【执行跳转】 ---
-    kprintf("Entering User Mode...\n");
-    switch_to_user_mode(); // 这里执行 iret 逻辑
+    // load user mode code in
+    load_and_start_user_program();
 
     // 正常情况下，switch_to_user_mode 不会返回到这里
     while(1) { __asm__ __volatile__("hlt"); }    

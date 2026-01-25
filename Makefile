@@ -1,5 +1,5 @@
 # ==========================================
-# GeminiOS 核心編譯控制檔
+# GeminiOS 核心編譯控制檔 (支持用戶態分離)
 # ==========================================
 
 # 1. 工具定義
@@ -8,33 +8,31 @@ LD = ld
 NASM = nasm
 
 # 2. 編譯選項
-# -m32: 產生 32 位元代碼
-# -ffreestanding: 不依賴標準庫
-# -fno-pic: 禁用位置無關代碼 (用於內核)
-# -fno-stack-protector: 禁用堆疊保護，避免連結到不存在的庫
-# -fno-builtin: 確保使用我們自定義的 string 函式 (如 str_len)
 CFLAGS = -m32 -ffreestanding -fno-pic -fno-stack-protector -fno-builtin -Wall -Wextra \
-         -Isrc/kernel/cpu -Isrc/kernel/drivers -Isrc/kernel/lib -Isrc/kernel/mm -Isrc/kernel
+         -Isrc/kernel/cpu -Isrc/kernel/drivers -Isrc/kernel/lib -Isrc/kernel/mm -Isrc/kernel -Isrc/include
+USER_CFLAGS = -m32 -ffreestanding -fno-pic -fno-stack-protector -fno-builtin -Wall -Wextra \
+         -Isrc/user/include
 
 # 3. 目錄與檔案定義
 SRC_DIR = src/kernel
+USER_SRC_DIR = src/user
 BUILD_DIR = build
+USER_BUILD_DIR = $(BUILD_DIR)/user
 
 # 自動搜尋所有的 C 文件與標頭檔
 C_SOURCES = $(shell find $(SRC_DIR) -name "*.c")
 HEADERS = $(shell find $(SRC_DIR) -name "*.h")
 
-# 這裡非常重要：從 C_SOURCES 中過濾掉核心入口 kernel.c
-# 因為我們要在鏈結時手動控制它的排序，避免編譯器隨機排序
+# 過濾核心入口
 OTHER_C_SOURCES = $(filter-out $(SRC_DIR)/kernel.c, $(C_SOURCES))
-
-# 將路徑映射到 build/ 目錄
 OBJ = $(OTHER_C_SOURCES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
-# 手動定義核心的「絕對順序」物件
+# 物件檔案定義
 KERNEL_ENTRY_OBJ = $(BUILD_DIR)/boot/kernel_entry.o
 KERNEL_MAIN_OBJ = $(BUILD_DIR)/kernel.o
 INTERRUPT_OBJ = $(BUILD_DIR)/cpu/interrupt.o
+# 新增：包裝用戶二進位檔的物件
+USER_BIN_OBJ = $(BUILD_DIR)/kernel/user_bin.o
 
 # ==========================================
 # 4. 最終目標規則
@@ -42,60 +40,67 @@ INTERRUPT_OBJ = $(BUILD_DIR)/cpu/interrupt.o
 
 all: os-image.bin
 
-# 製作 OS 鏡像 (將 Bootloader 與 Kernel 拼接)
+# 製作 OS 鏡像
 os-image.bin: $(BUILD_DIR)/boot/bootsect.bin $(BUILD_DIR)/kernel.bin
 	cat $^ > $@
-	@# 獲取當前總大小並對齊到 512 的倍數
 	@CUR_SIZE=$$(stat -c %s $@); \
 	 ALIGNED_SIZE=$$(( ((CUR_SIZE + 511) / 512) * 512 )); \
 	 truncate -s $$ALIGNED_SIZE $@
-	@echo "OS Image created and aligned to $$(( $$(stat -c %s $@) / 512 )) sectors."
+	@echo "OS Image created."
 
-# 5. 鏈結核心 (關鍵中的關鍵)
-# 順序必須是：Entry -> Main -> Interrupt -> Others
-$(BUILD_DIR)/kernel.bin: $(KERNEL_ENTRY_OBJ) $(KERNEL_MAIN_OBJ) $(INTERRUPT_OBJ) $(OBJ)
+# 5. 鏈結核心 (加入 USER_BIN_OBJ)
+$(BUILD_DIR)/kernel.bin: $(KERNEL_ENTRY_OBJ) $(KERNEL_MAIN_OBJ) $(INTERRUPT_OBJ) $(USER_BIN_OBJ) $(OBJ)
 	@echo "Linking Kernel Binary..."
 	$(LD) -m elf_i386 -o $@ -T src/link.ld $^ --oformat binary
-	@echo "Kernel size: $$(stat -c %s $@) bytes"
 
 # ==========================================
-# 6. 編譯規則
+# 6. 用戶態編譯規則 (新增)
 # ==========================================
 
-# 編譯主核心 C 文件 (kernel.c)
+# 生成用戶態二進位檔
+$(BUILD_DIR)/init.bin: $(USER_SRC_DIR)/start.asm $(USER_SRC_DIR)/main.c
+	@mkdir -p $(USER_BUILD_DIR)
+	@echo "Compiling User Program..."
+	$(NASM) $(USER_SRC_DIR)/start.asm -f elf32 -o $(USER_BUILD_DIR)/start.o
+	$(CC) -m32 -c $(USER_SRC_DIR)/main.c -o $(USER_BUILD_DIR)/main.o $(USER_CFLAGS) -fno-pic
+	$(LD) -m elf_i386 -T $(USER_SRC_DIR)/user.ld $(USER_BUILD_DIR)/start.o $(USER_BUILD_DIR)/main.o -o $@
+
+# 將 init.bin 透過 nasm 包裝成內核物件
+$(USER_BIN_OBJ): src/kernel/user_bin.asm $(BUILD_DIR)/init.bin
+	@mkdir -p $(dir $@)
+	@# 使用 -I 指向 build 目錄，讓 incbin 能找到 init.bin
+	$(NASM) $< -f elf32 -I$(BUILD_DIR)/ -o $@
+
+# ==========================================
+# 7. 內核編譯規則
+# ==========================================
+
 $(BUILD_DIR)/kernel.o: $(SRC_DIR)/kernel.c $(HEADERS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# 通用的 C 文件編譯規則
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# 編譯核心入口 (kernel_entry.asm)
 $(BUILD_DIR)/boot/kernel_entry.o: src/boot/kernel_entry.asm
 	@mkdir -p $(dir $@)
 	$(NASM) $< -f elf32 -o $@
 
-# 編譯中斷跳板 (interrupt.asm)
 $(BUILD_DIR)/cpu/interrupt.o: src/kernel/cpu/interrupt.asm
 	@mkdir -p $(dir $@)
 	$(NASM) $< -f elf32 -o $@
 
-# 編譯 Bootloader (直接輸出為純二進制 bin)
-# 增加了对kernel.bin的依賴，所以可以計算實際的sector大小並傳入匯編
 $(BUILD_DIR)/boot/bootsect.bin: src/boot/boot.asm $(BUILD_DIR)/kernel.bin
-	@# 計算 kernel 所需扇區
 	$(eval K_SECTORS=$(shell echo $$(( ($$(stat -c %s $(BUILD_DIR)/kernel.bin) + 511) / 512 ))))
-	@# 使用 -D 參數定義常量傳給 NASM
-	nasm -f bin $< -I src/boot/ -D KERNEL_SECTORS=$(K_SECTORS) -o $@
+	$(NASM) -f bin $< -I src/boot/ -D KERNEL_SECTORS=$(K_SECTORS) -o $@
 
 # ==========================================
-# 7. 管理指令
+# 8. 管理指令
 # ==========================================
 
 clean:
-	rm -rf build/ os-image.bin
+	rm -rf build/ os-image.bin init.bin
 
 run: os-image.bin
 	qemu-system-i386 -drive format=raw,file=os-image.bin -d int,cpu_reset -no-reboot
