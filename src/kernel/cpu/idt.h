@@ -27,6 +27,7 @@ extern idt_register_t idt_reg;
 
 /* 函式原型宣告 */
 void set_idt_gate(int n, unsigned int handler);
+void set_idt_gate_extended(int n, u32 handler, u16 cs_selector, u8 flag);
 void load_idt();
 
 #endif
