@@ -9,7 +9,7 @@ NASM = nasm
 
 # 2. 編譯選項
 CFLAGS = -m32 -ffreestanding -fno-pic -fno-stack-protector -fno-builtin -Wall -Wextra \
-         -Isrc/kernel/cpu -Isrc/kernel/drivers -Isrc/kernel/lib -Isrc/kernel/mm -Isrc/kernel -Isrc/include
+         -Isrc/kernel/include/cpu -Isrc/kernel/include/drivers -Isrc/kernel/include/lib -Isrc/kernel/include/mm -Isrc/kernel/include -Isrc/include
 USER_CFLAGS = -m32 -ffreestanding -fno-pic -fno-stack-protector -fno-builtin -Wall -Wextra \
          -Isrc/user/include
 

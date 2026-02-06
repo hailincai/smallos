@@ -11,4 +11,5 @@
 extern u8 initial_kernel_stack[4096];
 void switch_to_user_mode();
 void load_and_start_user_program();
+void task_exit(int exit_code);
 #endif

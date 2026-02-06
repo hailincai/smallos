@@ -1,4 +1,12 @@
-#include "syscall.h"
+#include "include/syscall.h"
+
+void printf(const char *s) {
+    syscall(SYS_PRINT, (int)s);
+}
+
+void exit(int exit_code) {
+    syscall(SYS_EXIT, exit_code);
+}
 
 void main() {
     // // 定義要打印的字符串
@@ -17,8 +25,6 @@ void main() {
     //     : "eax", "ebx"
     // );
 
-    syscall(1, (int)"Hello world from user!");
-
-    // 系統調用返回後，進入死循環
-    while(1);
+    printf((int)"Hello world from user!");
+    exit(0);
 }

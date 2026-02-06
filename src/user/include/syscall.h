@@ -1,5 +1,10 @@
 #ifndef USR_SYSCALL_H
 #define USR_SYSCALL_H
+
+#define SYS_EXIT  0
+#define SYS_PRINT 1
+#define SYS_TIME  2
+
 static inline int syscall(int num, int arg1) {
     int ret;
     __asm__ __volatile__ (

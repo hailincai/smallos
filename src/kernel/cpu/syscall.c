@@ -1,16 +1,25 @@
 #include "syscall.h"
 #include "isr.h"
 #include "display.h"
+#include "task.h"
 
 // 系統調用函數原型
+// #1 sys call
 void sys_print(registers_t *regs) {
     char *user_msg = (char *)regs->ebx;
     kprintf("[User]: %s\n", user_msg);
 }
 
+// #0 sys call
+void sys_exit(registers_t *regs) {
+    int exit_code = (int)regs->ebx;
+    task_exit(exit_code);
+}
+
 // 系統調用表
 static void *syscall_table[MAX_SYSCALLS] = {
-    [1] = sys_print
+    [1] = sys_print,
+    [0] = sys_exit,
 };
 
 void syscall_dispatch(registers_t *regs)
