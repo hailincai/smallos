@@ -64,3 +64,11 @@ void load_and_start_user_program() {
     // 4. 正式跳轉
     switch_to_user_mode();
 }
+
+void task_exit(int exit_code) {
+    kprintf("\n[Process Manager]: Process exited with code %d\n", exit_code);
+    
+    // 暫時的處理：掛起當前 CPU
+    // 未來這裡會調用 scheduler_remove_task()
+    while(1) { __asm__ __volatile__ ("hlt"); }
+}
