@@ -35,6 +35,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 - [x] **Day 16**：內核動態內存管理 —— kmalloc 與 kfree 的誕生
 - [x] **Day 17**：權限隔離的起點 —— 進入用戶態 (User Mode)
 - [x] **Day 18**：打破隔離的橋樑 —— 系統調用 (System Call) 的實作
+- [x] **Day 19**: 重構：優化內核目錄架構並實作 sys_exit 系統調用
 
 ### ⏳ 即將到來 (Coming Soon)
 - [ ] 物理與虛擬記憶體管理 (Paging)
@@ -50,6 +51,7 @@ SmallOS 是一個從零開始（From Scratch）開發的 x86 作業系統實踐�
 ```bash
 sudo apt update
 sudo apt install -y nasm qemu-system-x86 build-essential gdb
+
 
 
 
